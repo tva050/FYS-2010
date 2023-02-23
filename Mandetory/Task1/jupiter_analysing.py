@@ -10,9 +10,9 @@ plt.style.use('ggplot')
 
 JUP1 = cv2.imread('Mandetory\Supplementary data\Jupiter1.png')
 JUP2 = cv2.imread('Mandetory\Supplementary data\Jupiter2.png')
-#gray_JUP1 = cv2.imread('Mandetory\Supplementary data\Jupiter1.png', 0)
-gray_JUP2 = cv2.imread('Mandetory\Supplementary data\Jupiter2.png', 0)
-blue, green, red = cv2.split(JUP1)
+
+gray_JUP2 = cv2.imread('Mandetory\Supplementary data\Jupiter2.png', 0) # Jupiter2 in grayscale
+blue, green, red = cv2.split(JUP1) # Jupiter1 in splited in to RGB
 
 
 """ Task 1b """
