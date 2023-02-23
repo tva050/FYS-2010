@@ -10,8 +10,11 @@ plt.style.use('ggplot')
 
 JUP1 = cv2.imread('Mandetory\Supplementary data\Jupiter1.png')
 JUP2 = cv2.imread('Mandetory\Supplementary data\Jupiter2.png')
-gray_JUP1 = cv2.imread('Mandetory\Supplementary data\Jupiter1.png', 0)
+#gray_JUP1 = cv2.imread('Mandetory\Supplementary data\Jupiter1.png', 0)
 gray_JUP2 = cv2.imread('Mandetory\Supplementary data\Jupiter2.png', 0)
+blue, green, red = cv2.split(JUP1)
+
+
 """ Task 1b """
 def analyse_image():
     def histogram(img):
@@ -32,15 +35,19 @@ def analyse_image():
         f = np.fft.fft2(img)
         fshift = np.fft.fftshift(f)
         magnitude_spectrum = 20*np.log(np.abs(fshift))
+        plt.subplot(121),plt.imshow(img, cmap = 'gray')
+        plt.xticks([])
+        plt.yticks([])
+        plt.subplot(122)
         plt.imshow(magnitude_spectrum, cmap = 'gray')
-        plt.title('Magnitude Spectrum')
+        plt.title("Magnitude Spectrum", x=-0.1)
         plt.xticks([])
         plt.yticks([])
         plt.show()
         
     
     histogram(JUP1)
-    magnitude_spectrum(gray_JUP1)
+    magnitude_spectrum(red) # red channel of Jupiter1
     magnitude_spectrum(gray_JUP2)
     
     
