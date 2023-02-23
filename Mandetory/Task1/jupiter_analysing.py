@@ -12,7 +12,7 @@ JUP1 = cv2.imread('Mandetory\Supplementary data\Jupiter1.png')
 JUP2 = cv2.imread('Mandetory\Supplementary data\Jupiter2.png')
 
 gray_JUP2 = cv2.imread('Mandetory\Supplementary data\Jupiter2.png', 0) # Jupiter2 in grayscale
-blue, green, red = cv2.split(JUP1) # Jupiter1 in splited in to RGB
+blue, green, red = cv2.split(JUP1)  # Jupiter1 in RGB
 
 
 """ Task 1b """
@@ -20,7 +20,6 @@ def histogram(img):
     for i, col in enumerate(['b', 'g', 'r']):
         hist = cv2.calcHist([img], [i], None, [256], [0, 256])
         plt.plot(hist, color = col)
-        plt.xlim([0,256])
         plt.title("Histogram of Jupiter1")
     plt.show()
     
@@ -45,9 +44,14 @@ def magnitude_spectrum(img):
     plt.show()
     
 
+
+
+
+
+
 histogram(JUP1) # Jupiter1 in RGB
-magnitude_spectrum(red) # red channel of Jupiter1
-magnitude_spectrum(gray_JUP2) # Jupiter2 in grayscale
+#magnitude_spectrum(red) # red channel of Jupiter1
+#magnitude_spectrum(gray_JUP2) # Jupiter2 in grayscale
     
 
 
