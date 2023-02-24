@@ -50,7 +50,6 @@ magnitude_spectrum(red)
 
 """ Task 1c """
 
-
 def notch_filter(shape, d0, u_k, v_k):
     M, N = shape
     H = np.zeros((M, N))
@@ -64,7 +63,6 @@ def notch_filter(shape, d0, u_k, v_k):
             horizontal2 = u - M/2 - u_k 
             vertical2 = v - N/2 - v_k
            
-            
             if D_k <= d0 or D_mk <= d0 or horizontal1 == 0 or vertical1 == 0 or horizontal2 == 0 or vertical2 == 0:
                 H[u, v] = 0.0
             else: 
@@ -76,14 +74,14 @@ f = np.fft.fft2(red)
 fshift = np.fft.fftshift(f)
 magnitude_spectrum = np.log(np.abs(fshift))
 
-H1 = notch_filter(red.shape, 4, 7, 7)
+H1 = notch_filter(red.shape, 3, 7, 7)
 
 red = fshift * H1
 red = np.fft.ifftshift(red)
 red = np.fft.ifft2(red)
 red = np.abs(red)
 
-red = np.array(red, dtype=np.uint8)
+red = np.uint8(red)
 
 plt.imshow(magnitude_spectrum*H1, cmap = 'gray')
 plt.xticks([])
@@ -95,11 +93,10 @@ plt.xticks([])
 plt.yticks([])
 plt.show()
 
-# remove the vertical lines and the horizontal lines in the image by using a notch filter
+blue = ndi.median_filter(blue, size = 5)
+green = ndi.median_filter(green, size = 5)
 
+cv2.imshow("Restored Jupiter1", cv2.merge((blue, green, red)))
 
-sp_and_p_filtered = ndi.median_filter(cv2.merge([blue, green, red]), size = 3)
-
-cv2.imshow("Restored Jupiter1", sp_and_p_filtered)
         
 cv2.waitKey(0)  
