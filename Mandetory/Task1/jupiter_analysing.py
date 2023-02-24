@@ -18,7 +18,7 @@ blue, green, red = cv2.split(JUP1)
 """ Task 1b """
 
 def histogram(img):
-    for i, col in enumerate(['r', 'g', 'b']):
+    for i, col in enumerate(['b', 'g', 'r']):
         hist = cv2.calcHist([img], [i], None, [256], [0, 256])
         plt.plot(hist, color = col)
         plt.title("Histogram of Jupiter1")
@@ -44,7 +44,7 @@ def magnitude_spectrum(img):
     plt.yticks([])
     plt.show()
 
-#histogram(JUP1)
+histogram(JUP1)
 
 magnitude_spectrum(red)
 #magnitude_spectrum(gray_JUP2)
