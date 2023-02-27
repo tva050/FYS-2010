@@ -49,8 +49,10 @@ magnitude_spectrum(red)
 #magnitude_spectrum(gray_JUP2)
 
 """ Task 1c """
+orginal = cv2.merge((blue, green, red))
 
-def notch_filter(shape, d0, u_k, v_k):
+# Source: https://stackoverflow.com/questions/65483030/notch-reject-filtering-in-python
+def notch_filter(shape, d0, u_k, v_k): 
     M, N = shape
     H = np.zeros((M, N))
     
@@ -68,7 +70,6 @@ def notch_filter(shape, d0, u_k, v_k):
             else: 
                 H[u, v] = 1.0
     return H
-
 
 f = np.fft.fft2(red) 
 fshift = np.fft.fftshift(f)
@@ -88,15 +89,36 @@ plt.xticks([])
 plt.yticks([])
 plt.show()
 
-plt.imshow(red, cmap = 'gray')
-plt.xticks([])
-plt.yticks([])
-plt.show()
+notch_filtered = cv2.merge((blue, green, red))
 
 blue = ndi.median_filter(blue, size = 5)
 green = ndi.median_filter(green, size = 5)
 
-cv2.imshow("Restored Jupiter1", cv2.merge((blue, green, red)))
+median_filer = cv2.merge((blue, green, red))
 
-        
+plt.subplot(121)
+plt.imshow(cv2.cvtColor(orginal, cv2.COLOR_BGR2RGB))
+plt.xticks([])
+plt.yticks([])
+plt.title("Orginal Jupiter1")
+plt.subplot(122)
+plt.imshow(cv2.cvtColor(notch_filtered, cv2.COLOR_BGR2RGB))
+plt.xticks([])
+plt.yticks([])
+plt.title("Notch filtered Jupiter1")
+plt.show()
+
+plt.subplot(121)
+plt.imshow(cv2.cvtColor(notch_filtered, cv2.COLOR_BGR2RGB))
+plt.xticks([])
+plt.yticks([])
+plt.title("Notch filtered Jupiter1")
+plt.subplot(122)
+plt.imshow(cv2.cvtColor(median_filer, cv2.COLOR_BGR2RGB))
+plt.xticks([])
+plt.yticks([])
+plt.title("Median filtered Jupiter1")
+plt.show()
+
+
 cv2.waitKey(0)  
