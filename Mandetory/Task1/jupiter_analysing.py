@@ -91,10 +91,50 @@ plt.show()
 
 notch_filtered = cv2.merge((blue, green, red))
 
-blue = ndi.median_filter(blue, size = 5)
-green = ndi.median_filter(green, size = 5)
+blue = ndi.median_filter(blue, size = 3)
+#green = ndi.median_filter(green, size = 5)
+def contraharmonic_mean_filter(Q=0, img = []):
+    rows, cols = img.shape[:2]
+    img_contra_harmo = np.zeros((rows, cols))
+    for i in range(1, rows-1):
+        for j in range (1, cols-1):
+            ans = img[i-1:i+2, j-1:j+2]
+            numerator = ans**(Q+1)
+            if Q == 0:
+                denominator = 1/ans
+            else:
+                denominator = ans**Q
+            ans1 = np.sum(numerator)
+            ans2 = np.sum(denominator)
+            ans3 = ans1/ans2
+            #ans = round(ans3)
+            img_contra_harmo[i, j] = ans
+    return img_contra_harmo
 
-median_filer = cv2.merge((blue, green, red))
+green = contraharmonic_mean_filter(1.5, green)
+#green = np.uint8(green)            
+    
+median_filter = cv2.merge((blue, green, red))
+
+plt.rcParams["figure.figsize"] = [7.00, 3.50]
+plt.rcParams["figure.autolayout"] = True
+plt.rcParams["axes.grid"] = False
+plt.subplot(1, 3, 1)
+plt.imshow(cv2.cvtColor(orginal, cv2.COLOR_BGR2RGB))
+plt.xticks([])
+plt.yticks([])
+plt.title("Orginal Jupiter1")
+plt.subplot(1, 3, 2)
+plt.imshow(magnitude_spectrum*H1, cmap = 'gray')
+plt.xticks([])
+plt.yticks([])
+plt.title("Eliminated bursts")
+plt.subplot(1, 3, 3)
+plt.imshow(cv2.cvtColor(notch_filtered, cv2.COLOR_BGR2RGB))
+plt.xticks([])
+plt.yticks([])
+plt.title("Notch filtered Jupiter1")
+plt.show()
 
 plt.subplot(121)
 plt.imshow(cv2.cvtColor(orginal, cv2.COLOR_BGR2RGB))
@@ -106,7 +146,7 @@ plt.imshow(cv2.cvtColor(notch_filtered, cv2.COLOR_BGR2RGB))
 plt.xticks([])
 plt.yticks([])
 plt.title("Notch filtered Jupiter1")
-plt.show()
+
 
 plt.subplot(121)
 plt.imshow(cv2.cvtColor(notch_filtered, cv2.COLOR_BGR2RGB))
@@ -114,7 +154,7 @@ plt.xticks([])
 plt.yticks([])
 plt.title("Notch filtered Jupiter1")
 plt.subplot(122)
-plt.imshow(cv2.cvtColor(median_filer, cv2.COLOR_BGR2RGB))
+plt.imshow(cv2.cvtColor(median_filter, cv2.COLOR_BGR2RGB))
 plt.xticks([])
 plt.yticks([])
 plt.title("Median filtered Jupiter1")
