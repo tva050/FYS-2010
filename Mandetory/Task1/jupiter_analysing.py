@@ -93,27 +93,31 @@ notch_filtered = cv2.merge((blue, green, red))
 
 blue = ndi.median_filter(blue, size = 3)
 #green = ndi.median_filter(green, size = 5)
-def contraharmonic_mean_filter(Q=0, img = []):
-    rows, cols = img.shape[:2]
-    img_contra_harmo = np.zeros((rows, cols))
-    for i in range(1, rows-1):
-        for j in range (1, cols-1):
-            ans = img[i-1:i+2, j-1:j+2]
-            numerator = ans**(Q+1)
-            if Q == 0:
-                denominator = 1/ans
-            else:
-                denominator = ans**Q
-            ans1 = np.sum(numerator)
-            ans2 = np.sum(denominator)
-            ans3 = ans1/ans2
-            #ans = round(ans3)
-            img_contra_harmo[i, j] = ans
-    return img_contra_harmo
 
-green = contraharmonic_mean_filter(1.5, green)
-#green = np.uint8(green)            
+""" def CHM_operator(roi,q):
+    roi = roi.astype(np.float64) #Copy of the roi
+    dividend= np.mean((roi)**(q+1)) # 
+    divisor=np.mean((roi)**(q))
+    quo= dividend/divisor
+    return quo
+def CHM_Algo(image,q):
+    new_image = np.zeros(image.shape)
+    image = cv2.copyMakeBorder(image,1,1,1,1,cv2.BORDER_DEFAULT)
+    for i in range(1,image.shape[0]-1):
+        for j in range(1,image.shape[1]-1):
+            a=i-1
+            b=j-1
+            new_image[a,b] = CHM_operator(image[a:a+3,b:b+3],q)
     
+    i_min=np.min(image) # min pixel
+    i_max=np.max(image) # max pixel
+    new_image = (new_image-i_min) * (255/i_max)
+    new_image = new_image.astype(np.uint8)
+    return new_image """
+
+def CHM_filter(img, q):
+    
+
 median_filter = cv2.merge((blue, green, red))
 
 plt.rcParams["figure.figsize"] = [7.00, 3.50]
