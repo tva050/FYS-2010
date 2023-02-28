@@ -148,11 +148,22 @@ def plot_median_CHM_filtered_J1img():
     plt.show()
     
 def restored_JUP1_image():
-    plt.imshow(cv2.cvtColor(CHM_filtered, cv2.COLOR_BGR2RGB))
-    plt.xticks([])
-    plt.yticks([])
-    plt.title("Restored Jupiter1")
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    ax1.imshow(cv2.cvtColor(orginal, cv2.COLOR_BGR2RGB))
+    ax1.set_title("Orginal Jupiter1")
+    ax2.imshow(cv2.cvtColor(CHM_filtered, cv2.COLOR_BGR2RGB))
+    ax2.set_title("Restored Jupiter1")
+    fig.suptitle("$\Longrightarrow$\n$\Longrightarrow$", x = 0.52, y = 0.45, fontsize = 16)
+    fig.tight_layout(pad = 3.5)
+    
+    # remove the x and y ticks
+    for ax in fig.get_axes():
+        ax.set_xticks([])
+        ax.set_yticks([])
+    
     plt.show()
+    
+    
     
 # plot_notch_filtered_J1img_mag()
 # plot_median_CHM_filtered_J1img()
