@@ -15,7 +15,8 @@ gray_JUP2 = cv2.imread('Mandetory\Supplementary data\Jupiter2.png',0)
 blue, green, red = cv2.split(JUP1)
 
 
-""" --------------- Task 1b ---------------"""
+""" ---------------------------- Task 1b ----------------------------"""
+
 def histogram(img):
     for i, col in enumerate(['b', 'g', 'r']):
         hist = cv2.calcHist([img], [i], None, [256], [0, 256])
@@ -49,12 +50,12 @@ def magnitude_spectrum(img):
 #magnitude_spectrum(gray_JUP2)
 
 
-""" --------------- Task 1c ---------------"""
+""" ---------------------------- Task 1c ----------------------------"""
 
-orginal = cv2.merge((blue, green, red))
+orginal_jup1 = cv2.merge((blue, green, red))
 # __Notch filter__
 # Source: https://stackoverflow.com/questions/65483030/notch-reject-filtering-in-python
-def notch_filter(shape, d0, u_k, v_k): 
+def notch_filter_J1(shape, d0, u_k, v_k): 
     M, N = shape
     H = np.zeros((M, N))
     
@@ -72,13 +73,13 @@ def notch_filter(shape, d0, u_k, v_k):
             else: 
                 H[u, v] = 1.0
     return H
-f = np.fft.fft2(red) 
-fshift = np.fft.fftshift(f)
-magnitude_spectrum = np.log(np.abs(fshift))
+f_J1 = np.fft.fft2(red) 
+fshift_J1 = np.fft.fftshift(f_J1)
+magnitude_spectrum_J1 = np.log(np.abs(fshift_J1))
 
-H1 = notch_filter(red.shape, 3, 7, 7)
+H1_J1 = notch_filter_J1(red.shape, 3, 7, 7)
 
-red = fshift * H1
+red = fshift_J1 * H1_J1
 red = np.fft.ifftshift(red)
 red = np.fft.ifft2(red)
 red = np.abs(red)
@@ -96,7 +97,7 @@ np.seterr(invalid="ignore") # To ignore the warning of division by zero
 def CHM_filter(img, Q):
     img = img.astype(np.float64)
     numirator = img**(Q+1)
-    denumirator = (img)**(Q)
+    denumirator = img**(Q)
     kernel = np.full(shape = 3, fill_value= 1.0, dtype = np.float64)
     result = cv2.filter2D(numirator, -1, kernel) / cv2.filter2D(denumirator, -1, kernel)
     return result
@@ -110,12 +111,12 @@ def plot_notch_filtered_J1img_mag():
     plt.rcParams["figure.autolayout"] = True
     plt.rcParams["axes.grid"] = False
     plt.subplot(1, 3, 1)
-    plt.imshow(cv2.cvtColor(orginal, cv2.COLOR_BGR2RGB))
+    plt.imshow(cv2.cvtColor(orginal_jup1, cv2.COLOR_BGR2RGB))
     plt.xticks([])
     plt.yticks([])
     plt.title("Orginal Jupiter1")
     plt.subplot(1, 3, 2)
-    plt.imshow(magnitude_spectrum*H1, cmap = 'gray')
+    plt.imshow(magnitude_spectrum_J1*H1_J1, cmap = 'gray')
     plt.xticks([])
     plt.yticks([])
     plt.title("Eliminated bursts")
@@ -149,7 +150,7 @@ def plot_median_CHM_filtered_J1img():
     
 def restored_JUP1_image():
     fig, (ax1, ax2) = plt.subplots(1, 2)
-    ax1.imshow(cv2.cvtColor(orginal, cv2.COLOR_BGR2RGB))
+    ax1.imshow(cv2.cvtColor(orginal_jup1, cv2.COLOR_BGR2RGB))
     ax1.set_title("Orginal Jupiter1")
     ax2.imshow(cv2.cvtColor(CHM_filtered, cv2.COLOR_BGR2RGB))
     ax2.set_title("Restored Jupiter1")
@@ -165,11 +166,77 @@ def restored_JUP1_image():
     
     
     
-# plot_notch_filtered_J1img_mag()
-# plot_median_CHM_filtered_J1img()
-restored_JUP1_image()
+#plot_notch_filtered_J1img_mag()
+#plot_median_CHM_filtered_J1img()
+#restored_JUP1_image()
 
 
-""" --------------- Task 1d ---------------"""
+""" ---------------------------- Task 1d ----------------------------"""
+
+blue_j2, green_j2, red_j2 = cv2.split(JUP2)
+
+
+def notch_filter_J2(shape, d0, u_k, v_k): 
+    M, N = shape
+    H = np.zeros((M, N))
+    
+    for u in range(0, M):
+        for v in range(0, N):
+            D_k = np.sqrt((u - M/2 + u_k)**2 + (v - N/2 + v_k)**2)
+            D_mk = np.sqrt((u - M/2 - u_k)**2 + (v - N/2 - v_k)**2)
+            
+            if D_k <= d0 or D_mk <= d0 :
+                H[u, v] = 0.0
+            else: 
+                H[u, v] = 1.0
+    return H
+
+def fourier_transform_J2(img):
+    f = np.fft.fft2(img)
+    fshift = np.fft.fftshift(f)
+    magnitude_spectrum = np.log(np.abs(fshift))
+
+    H1 = notch_filter_J2(img.shape, 2, 5, 0)
+
+    img = fshift * H1
+    img = np.fft.ifftshift(img)
+    img = np.fft.ifft2(img)
+    img = np.abs(img)
+    img = np.uint8(img)
+    return img
+
+blue_j2 = fourier_transform_J2(blue_j2)
+green_j2 = fourier_transform_J2(green_j2)
+red_j2 = fourier_transform_J2(red_j2)
+
+notch_filtered_j2 = cv2.merge((blue_j2, green_j2, red_j2))
+
+plt.subplot(121)
+plt.imshow(cv2.cvtColor(JUP2, cv2.COLOR_BGR2RGB))
+plt.xticks([])
+plt.yticks([])
+plt.title("Orginal Jupiter2")
+plt.subplot(122)
+plt.imshow(cv2.cvtColor(notch_filtered_j2, cv2.COLOR_BGR2RGB))
+plt.xticks([])
+plt.yticks([])
+plt.title("Notch filtered Jupiter2")
+plt.show()
+
+median_filter_noch = cv2.medianBlur(notch_filtered_j2, 3)
+
+plt.subplot(121)
+plt.imshow(cv2.cvtColor(notch_filtered_j2, cv2.COLOR_BGR2RGB))
+plt.xticks([])
+plt.yticks([])
+plt.title("Notch filtered Jupiter2")
+plt.subplot(122)
+plt.imshow(cv2.cvtColor(median_filter_noch, cv2.COLOR_BGR2RGB))
+plt.xticks([])
+plt.yticks([])
+plt.title("Median filtered Jupiter2")
+plt.show()
+
+
 
 cv2.waitKey(0)  
