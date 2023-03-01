@@ -283,7 +283,9 @@ def restored_JUP2_image():
 
 
 """ ---------------------------- Task 1e ----------------------------"""
-
+""" 
+Your solution should contain one spatial, and one Fourier enhancement metho
+"""
 
 
 
