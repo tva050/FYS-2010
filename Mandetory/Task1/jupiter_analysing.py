@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import scipy.ndimage as ndi
 import scipy as sc
+from scipy.signal import wiener
 
 plt.style.use('ggplot')
 
@@ -46,7 +47,7 @@ def magnitude_spectrum(img):
 
 #___________RUN FUNCTIONS___________ 
 #histogram(JUP1)
-#magnitude_spectrum(red)
+magnitude_spectrum(red)
 #magnitude_spectrum(gray_JUP2)
 #___________________________________
 
@@ -125,8 +126,8 @@ def CHM_filter(img, Q):
     result = cv2.filter2D(numirator, -1, kernel) / cv2.filter2D(denumirator, -1, kernel)
     return result
 
-CHM_filtered = CHM_filter(median_filter, -2.)
-CHM_filtered = np.uint8(CHM_filtered)
+CHM_filtered_j1 = CHM_filter(median_filter, -2.)
+CHM_filtered_j1 = np.uint8(CHM_filtered_j1)
 
 def plot_median_CHM_filtered_J1img():
     plt.rcParams["figure.figsize"] = [7.00, 3.50]
@@ -143,7 +144,7 @@ def plot_median_CHM_filtered_J1img():
     plt.yticks([])
     plt.title("Median filtered")
     plt.subplot(1, 3, 3)
-    plt.imshow(cv2.cvtColor(CHM_filtered, cv2.COLOR_BGR2RGB))
+    plt.imshow(cv2.cvtColor(CHM_filtered_j1, cv2.COLOR_BGR2RGB))
     plt.xticks([])
     plt.yticks([])
     plt.title("CHM filtered")
@@ -153,7 +154,7 @@ def restored_JUP1_image():
     fig, (ax1, ax2) = plt.subplots(1, 2)
     ax1.imshow(cv2.cvtColor(orginal_jup1, cv2.COLOR_BGR2RGB))
     ax1.set_title("Orginal Jupiter1")
-    ax2.imshow(cv2.cvtColor(CHM_filtered, cv2.COLOR_BGR2RGB))
+    ax2.imshow(cv2.cvtColor(CHM_filtered_j1, cv2.COLOR_BGR2RGB))
     ax2.set_title("Restored Jupiter1")
     fig.suptitle("$\Longrightarrow$\n$\Longrightarrow$", x = 0.52, y = 0.45, fontsize = 16)
     fig.tight_layout(pad = 3.5)
@@ -167,9 +168,9 @@ def restored_JUP1_image():
     
     
 #___________RUN FUNCTIONS___________
-#plot_notch_filtered_J1img_mag()
+plot_notch_filtered_J1img_mag()
 #plot_median_CHM_filtered_J1img()
-#restored_JUP1_image()
+restored_JUP1_image()
 #___________________________________
 
 
@@ -284,9 +285,22 @@ def restored_JUP2_image():
 
 """ ---------------------------- Task 1e ----------------------------"""
 """ 
-Your solution should contain one spatial, and one Fourier enhancement metho
+Your solution should contain one spatial, and one Fourier enhancement methods.
+
+
+                            Image enhancement JUP1
+Spatial enhancement: 
+    - contrast stretching
+    - edge enhancement ?
+    - conservative smoothing ? 
+    - Laplacian filter
+Fourier enhancement:
+    - Gamma filter (power law transformation)
+    - Laplacian filter 
+
 """
 
 
 
 cv2.waitKey(0)  
+cv2.destroyAllWindows()

@@ -101,6 +101,3 @@ plt.title("Filtered")
 plt.xticks([])
 plt.yticks([])
 plt.show()
-
-
-
