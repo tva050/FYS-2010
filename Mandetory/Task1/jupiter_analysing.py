@@ -47,7 +47,7 @@ def magnitude_spectrum(img):
 
 #___________RUN FUNCTIONS___________ 
 #histogram(JUP1)
-magnitude_spectrum(red)
+#magnitude_spectrum(red)
 #magnitude_spectrum(gray_JUP2)
 #___________________________________
 
@@ -168,9 +168,9 @@ def restored_JUP1_image():
     
     
 #___________RUN FUNCTIONS___________
-plot_notch_filtered_J1img_mag()
+#plot_notch_filtered_J1img_mag()
 #plot_median_CHM_filtered_J1img()
-restored_JUP1_image()
+#restored_JUP1_image()
 #___________________________________
 
 

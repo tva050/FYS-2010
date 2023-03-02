@@ -6,8 +6,9 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import scipy.io as sio
 import scipy.ndimage as ndi
+from PIL import Image
 
-JUP1 = cv2.imread('Mandetory\Supplementary data\Jupiter1.png')
+JUP1 = cv2.imread('Mandetory\Supplementary data\Jupiter1.png') 
 
 blue, green, red = cv2.split(JUP1)
 
@@ -48,13 +49,13 @@ red = np.uint8(red)
 
 notch_filtered = cv2.merge((blue, green, red))
 
+
 # __Median filter__
-median_filter = ndi.median_filter(cv2.merge((blue, green, red)), size=3)
+median_filter = ndi.median_filter(notch_filtered, size=3)
 
 # __Contrast Harmonic Mean filter__
-np.seterr(invalid="ignore") # To ignore the warning of division by zero
-# Contrast Harmonic Mean filter, 
-# written with help from https://stackabuse.com/introduction-to-image-processing-in-python-with-opencv/
+np.seterr(invalid="ignore") # 
+
 def CHM_filter(img, Q):
     img = img.astype(np.float64)
     numirator = img**(Q+1)
@@ -66,6 +67,85 @@ def CHM_filter(img, Q):
 CHM_filtered_j1 = CHM_filter(median_filter, -2.)
 CHM_filtered_j1 = np.uint8(CHM_filtered_j1)
 
+blue_, green_, red_ = cv2.split(CHM_filtered_j1)
+
+def contrast_stretching(img):
+    img = img.astype(np.float64)
+    img = img - np.min(img)
+    img = img / np.max(img)
+    img = img * 255
+    return img
+
+blue_ = contrast_stretching(blue_)
+green_ = contrast_stretching(green_)
+red_ = contrast_stretching(red_)
+
+contrast_stretching = cv2.merge((blue_, green_, red_))
+contrast_stretching = np.uint8(contrast_stretching)
+_blue_, _green_, _red_ = cv2.split(contrast_stretching)
+
+
+def laplacian_filter(img):
+    kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+    img = cv2.filter2D(img, -1, kernel)
+    return img
+
+laplacian_filter = laplacian_filter(contrast_stretching)
+
+def gamma_correction(img, gamma):
+    img = img.astype(np.float64)
+    img = img / 255
+    img = img ** gamma
+    img = img * 255
+    return img
+
+gamma_correction = gamma_correction(laplacian_filter, 1)
+gamma_correction = np.uint8(gamma_correction)
+
+g_blue, g_green, g_red = cv2.split(gamma_correction)
+
+plt.subplot(1, 3, 1)
+plt.imshow(cv2.cvtColor(contrast_stretching, cv2.COLOR_BGR2RGB))
+plt.xticks([])
+plt.yticks([])
+plt.title("Contrast stretching")
+plt.subplot(1, 3, 2)
+plt.imshow(cv2.cvtColor(laplacian_filter, cv2.COLOR_BGR2RGB))
+plt.xticks([])
+plt.yticks([])
+plt.title("Laplacian filtered")
+plt.subplot(1, 3, 3)
+plt.imshow(cv2.cvtColor(gamma_correction, cv2.COLOR_BGR2RGB))
+plt.xticks([])
+plt.yticks([])
+plt.title("Gamma correction")
+plt.show()
+
+median_filtering = ndi.median_filter(gamma_correction, size=3)
+
+CHM_filtered_1 = CHM_filter(median_filtering, -1.5)
+CHM_filtered_1 = np.uint8(CHM_filtered_1)
+
+plt.subplot(1, 2, 1)
+plt.imshow(cv2.cvtColor(CHM_filtered_j1, cv2.COLOR_BGR2RGB))
+plt.xticks([])
+plt.yticks([])
+plt.title("Gamma correction")
+plt.subplot(1, 2, 2)
+plt.imshow(cv2.cvtColor(CHM_filtered_1, cv2.COLOR_BGR2RGB))
+plt.xticks([])
+plt.yticks([])
+plt.title("CHM filtered")
+plt.show()
+
+
+
+def plot_J1img_mag():
+    plt.imshow(magnitude_spectrum_J1*H1_J1, cmap = 'gray')
+    plt.xticks([])
+    plt.yticks([])
+    plt.title("Eliminated bursts")
+    plt.show()
 
 def plot_notch_filtered_J1img_mag():
     plt.rcParams["figure.figsize"] = [7.00, 3.50]
@@ -125,7 +205,22 @@ def restored_JUP1_image():
     
     plt.show()
     
-    
+def plot_J1img_contrast():
+    plt.subplot(121)
+    plt.imshow(cv2.cvtColor(CHM_filtered_j1, cv2.COLOR_BGR2RGB))
+    plt.xticks([]), plt.yticks([])
+    plt.title('Orginal Jupiter1')
+    plt.subplot(122)
+    plt.imshow(cv2.cvtColor(contrast_stretching, cv2.COLOR_BGR2RGB))
+    plt.xticks([]), plt.yticks([])
+    plt.title('Contrast stretching')
+    plt.show()
 
 
-
+#___________RUN FUNCTIONS___________
+#plot_J1img_mag()
+#plot_notch_filtered_J1img_mag()
+#plot_median_CHM_filtered_J1img()
+#restored_JUP1_image()
+#plot_J1img_contrast()
+#___________________________________
