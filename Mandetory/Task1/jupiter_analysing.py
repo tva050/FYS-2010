@@ -87,7 +87,8 @@ red = np.fft.ifft2(red)
 red = np.abs(red)
 red = np.uint8(red)
 
-notch_filtered = cv2.merge((blue, green, red))
+notch_filtered_j1 = cv2.merge((blue, green, red))
+n_blue, n_green, n_red = cv2.split(notch_filtered_j1)
 
 # __Plotting__
 def plot_notch_filtered_J1img_mag():
@@ -105,7 +106,7 @@ def plot_notch_filtered_J1img_mag():
     plt.yticks([])
     plt.title("Eliminated bursts")
     plt.subplot(1, 3, 3)
-    plt.imshow(cv2.cvtColor(notch_filtered, cv2.COLOR_BGR2RGB))
+    plt.imshow(cv2.cvtColor(notch_filtered_j1, cv2.COLOR_BGR2RGB))
     plt.xticks([])
     plt.yticks([])
     plt.title("Notch filtered Jupiter1")
@@ -134,7 +135,7 @@ def plot_median_CHM_filtered_J1img():
     plt.rcParams["figure.autolayout"] = True
     plt.rcParams["axes.grid"] = False
     plt.subplot(1, 3, 1)
-    plt.imshow(cv2.cvtColor(notch_filtered, cv2.COLOR_BGR2RGB))
+    plt.imshow(cv2.cvtColor(notch_filtered_j1, cv2.COLOR_BGR2RGB))
     plt.xticks([])
     plt.yticks([])
     plt.title("Notch filtered Jupiter1")
@@ -215,6 +216,12 @@ magnitude_spectrum = np.log(np.abs(fshift))
 H1 = notch_filter_J2(blue.shape, 2, 5, 0)
 
 notch_filtered_j2 = cv2.merge((blue_j2, green_j2, red_j2))
+
+median_filter_j2 = cv2.medianBlur(notch_filtered_j2, 3)
+
+CHM_filtered_j2 = CHM_filter(median_filter_j2, 3)
+CHM_filtered_j2 = np.uint8(CHM_filtered_j2)
+
 def plot_notch_filtered_J2img_mag():
     plt.rcParams["figure.figsize"] = [7.00, 3.50]
     plt.rcParams["figure.autolayout"] = True
@@ -235,11 +242,7 @@ def plot_notch_filtered_J2img_mag():
     plt.yticks([])
     plt.title("Notch filtered")
     plt.show()
-
-median_filter_j2 = cv2.medianBlur(notch_filtered_j2, 3)
-CHM_filtered_j2 = CHM_filter(median_filter_j2, 3)
-CHM_filtered_j2 = np.uint8(CHM_filtered_j2)
-
+    
 def plot_median_CHM_filtered_J2img():
     plt.rcParams["figure.figsize"] = [7.00, 3.50]
     plt.rcParams["figure.autolayout"] = True
@@ -284,21 +287,43 @@ def restored_JUP2_image():
 
 
 """ ---------------------------- Task 1e ----------------------------"""
-""" 
-Your solution should contain one spatial, and one Fourier enhancement methods.
 
+def homomorphic_filter(img, gL, gH, c, D0):
+    img = img.astype(np.float64)
+    img = np.log1p(img) # log transform to reduce the effect of dark pixels
 
-                            Image enhancement JUP1
-Spatial enhancement: 
-    - contrast stretching
-    - edge enhancement ?
-    - conservative smoothing ? 
-    - Laplacian filter
-Fourier enhancement:
-    - Gamma filter (power law transformation)
-    - Laplacian filter 
+    M, N = img.shape
+    u, v = np.meshgrid(np.arange(0, N), np.arange(0, M))
+    Duv = np.sqrt((u - N/2)**2 + (v - M/2)**2)
+    highpass = (gH - gL) * (1 - np.exp(-(c * Duv**2) / (D0**2))) + gL       # GHPF (Gaussian High Pass Filter)
+    #highpass = (1.0 - 1.0 / (1.0 + (D0 / Duv)**(2 * c))) * (gH - gL) + gL  # BHPF (Butterworth High Pass Filter)
+    
+    fft_img = np.fft.fftshift(np.fft.fft2(img)) # fft  
+    filtering_img = fft_img * highpass # filtering image
+    filtered_img_log = np.fft.ifft2(np.fft.ifftshift(filtering_img)) # ifft shift
+    
+    # convert back to the original scale 
+    img_filtered = np.exp(filtered_img_log) - 1
+    img_filtered = np.real(img_filtered)
+    img_filtered = np.uint8(img_filtered * 255 / np.max(img_filtered)) 
+    
+    return img_filtered
 
-"""
+n_blue  = homomorphic_filter(n_blue,  0.95, 1.0, 2, 10)
+n_green = homomorphic_filter(n_green, 0.95, 1.0, 2, 10)
+n_red   = homomorphic_filter(n_red,   0.95, 1.0, 2, 10)
+
+homomorphic_filtered_j1 = cv2.merge((n_blue, n_green, n_red))
+
+plt.subplot(1, 2, 1)
+plt.imshow(cv2.cvtColor(notch_filtered_j1, cv2.COLOR_BGR2RGB))
+plt.xticks([]), plt.yticks([])
+plt.title("Notch filtered")
+plt.subplot(1, 2, 2)
+plt.imshow(cv2.cvtColor(homomorphic_filtered_j1, cv2.COLOR_BGR2RGB))
+plt.xticks([]), plt.yticks([])
+plt.title("Homomorphic filtered")
+plt.show()
 
 
 

@@ -59,10 +59,14 @@ def homomorphic_filter(img, gL, gH, c, D0):
     M, N = img.shape
     u, v = np.meshgrid(np.arange(0, N), np.arange(0, M))
     Duv = np.sqrt((u - N/2)**2 + (v - M/2)**2)
-    highpass = (gH - gL) * (1 - np.exp(-c * (Duv**2) / (D0**2))) + gL
-    #highpass = (1.0 - 1.0 / (1.0 + (D0 / Duv)**(2 * c))) * (gH - gL) + gL 
+    highpass = (gH - gL) * (1 - np.exp(-(c * Duv**2) / (D0**2))) + gL       # GHPF (Gaussian High Pass Filter)
+    #highpass = (1.0 - 1.0 / (1.0 + (D0 / Duv)**(2 * c))) * (gH - gL) + gL  # BHPF (Butterworth High Pass Filter)
     
-    fft_img = np.fft.fftshift(np.fft.fft2(img)) # fft
+    fft_img = np.fft.fftshift(np.fft.fft2(img)) # fft    
+    plt.imshow(np.log(np.abs(fft_img)), cmap='gray')
+    plt.title('Fourier spectrum')
+    plt.xticks([]), plt.yticks([])
+    plt.show()
     
     filtering_img = fft_img * highpass # filtering image
     filtered_img_log = np.fft.ifft2(np.fft.ifftshift(filtering_img)) # ifft shift
@@ -74,20 +78,29 @@ def homomorphic_filter(img, gL, gH, c, D0):
     
     return img_filtered
  
-blue_profiler = homomorphic_filter (blue_,  1.4, 1.3, 5, 20)
-green_profiler = homomorphic_filter(green_, 1.4, 1.3, 5, 20)
-red_profiler = homomorphic_filter  (red_,   1.4, 1.3, 5, 20)
+blue_profiler = homomorphic_filter (blue_,  0.8, 2., 10, 200)
+green_profiler = homomorphic_filter(green_, 0.8, 2., 10, 200)
+red_profiler = homomorphic_filter  (red_,   0.8, 2., 10, 200)
     
 homomotphic_filtered = cv2.merge((blue_profiler, green_profiler, red_profiler))
+
+plt.imshow(cv2.cvtColor(homomotphic_filtered, cv2.COLOR_BGR2RGB))
+plt.title(r'Homomorphic filtered: low $\gamma_L$, high $\gamma_H$')
+plt.xticks([]), plt.yticks([])
+plt.show()
 
 plt.subplot(121)
 plt.imshow(cv2.cvtColor(notch_filtered, cv2.COLOR_BGR2RGB))
 plt.title('Notch filtered')
+plt.xticks([]), plt.yticks([])
 plt.subplot(122)
 plt.imshow(cv2.cvtColor(homomotphic_filtered, cv2.COLOR_BGR2RGB))
-plt.title('Homomorphic filtered')
+plt.title(' Notch and Homomorphic filtered ')
+plt.xticks([]), plt.yticks([])
 plt.show()
 
+
+    
 
 """ 
 _________________________SPATIAL DOMAIN_________________________
@@ -109,10 +122,10 @@ def CHM_filter(img, Q):
     result = cv2.filter2D(numirator, -1, kernel) / cv2.filter2D(denumirator, -1, kernel)
     return result
 
-CHM_filtered_j1 = CHM_filter(median_filter1, -3)
+CHM_filtered_j1 = CHM_filter(median_filter1, -2)
 CHM_filtered_j1 = np.uint8(CHM_filtered_j1)
 
-chm_filtered = CHM_filter(median_filter2, -3)
+chm_filtered = CHM_filter(median_filter2, -2)
 chm_filtered = np.uint8(chm_filtered)
 
 blue_chm, green_chm, red_chm = cv2.split(chm_filtered)
@@ -131,7 +144,7 @@ red_chm = contrast_stretching(red_chm)
 contrast_stretching = cv2.merge((blue_chm, green_chm, red_chm))
 contrast_stretching = np.uint8(contrast_stretching)
 
-plt.subplot(2, 3, 1)
+""" plt.subplot(2, 3, 1)
 plt.imshow(cv2.cvtColor(orginal_jup1, cv2.COLOR_BGR2RGB))
 plt.title('Original')
 plt.subplot(2, 3, 2)
@@ -149,6 +162,6 @@ plt.subplot(2, 3, 6)
 plt.imshow(cv2.cvtColor(contrast_stretching, cv2.COLOR_BGR2RGB))
 plt.title('CHM filtered 2')
 plt.show() 
-
+ """
 
 

@@ -74,7 +74,7 @@ def homomorphic_filter(image, gL, gH, c, d0):
     return img_filtered
 
 # Apply the homomorphic filter with the specified parameters
-img_filtered = homomorphic_filter(notch_filtered, 3, 0.2, 2.5, 0)
+img_filtered = homomorphic_filter(notch_filtered, 2, 0.5, 3, 10)
 
 
 # Display the original and filtered images
