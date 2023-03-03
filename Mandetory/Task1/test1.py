@@ -78,9 +78,9 @@ def homomorphic_filter(img, gL, gH, c, D0):
     
     return img_filtered
  
-blue_profiler = homomorphic_filter (blue_,  0.8, 2., 10, 200)
-green_profiler = homomorphic_filter(green_, 0.8, 2., 10, 200)
-red_profiler = homomorphic_filter  (red_,   0.8, 2., 10, 200)
+blue_profiler = homomorphic_filter (blue_,  0.9, 1., 10, 200)
+green_profiler = homomorphic_filter(green_, 0.9, 1., 10, 200)
+red_profiler = homomorphic_filter  (red_,   0.9, 1., 10, 200)
     
 homomotphic_filtered = cv2.merge((blue_profiler, green_profiler, red_profiler))
 
@@ -124,6 +124,7 @@ def CHM_filter(img, Q):
 
 CHM_filtered_j1 = CHM_filter(median_filter1, -2)
 CHM_filtered_j1 = np.uint8(CHM_filtered_j1)
+blue__, green__, red__ = cv2.split(CHM_filtered_j1)
 
 chm_filtered = CHM_filter(median_filter2, -2)
 chm_filtered = np.uint8(chm_filtered)
@@ -137,12 +138,30 @@ def contrast_stretching(img):
     img = img * 255
     return img
 
+blue__ = contrast_stretching(blue__)
+green__ = contrast_stretching(green__)
+red__ = contrast_stretching(red__)
+
+cont_stretch = cv2.merge((blue__, green__, red__))
+cont_stretch = np.uint8(cont_stretch)
+
 blue_chm = contrast_stretching(blue_chm)
 green_chm = contrast_stretching(green_chm)
 red_chm = contrast_stretching(red_chm)
 
 contrast_stretching = cv2.merge((blue_chm, green_chm, red_chm))
 contrast_stretching = np.uint8(contrast_stretching)
+
+plt.subplot(121)
+plt.imshow(cv2.cvtColor(cont_stretch, cv2.COLOR_BGR2RGB))
+plt.title('Contrast stretching')
+plt.xticks([]), plt.yticks([])
+plt.subplot(122)
+plt.imshow(cv2.cvtColor(contrast_stretching, cv2.COLOR_BGR2RGB))
+plt.title('Contrast stretching')
+plt.xticks([]), plt.yticks([])
+plt.show()
+
 
 """ plt.subplot(2, 3, 1)
 plt.imshow(cv2.cvtColor(orginal_jup1, cv2.COLOR_BGR2RGB))

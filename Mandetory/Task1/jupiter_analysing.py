@@ -113,7 +113,7 @@ def plot_notch_filtered_J1img_mag():
     plt.show()
 
 # __Median filter__
-median_filter = ndi.median_filter(cv2.merge((blue, green, red)), size=3)
+median_filtered_j1 = ndi.median_filter(cv2.merge((blue, green, red)), size=3)
 
 # __Contrast Harmonic Mean filter__
 np.seterr(invalid="ignore") # To ignore the warning of division by zero
@@ -127,7 +127,7 @@ def CHM_filter(img, Q):
     result = cv2.filter2D(numirator, -1, kernel) / cv2.filter2D(denumirator, -1, kernel)
     return result
 
-CHM_filtered_j1 = CHM_filter(median_filter, -2.)
+CHM_filtered_j1 = CHM_filter(median_filtered_j1, -2.)
 CHM_filtered_j1 = np.uint8(CHM_filtered_j1)
 
 def plot_median_CHM_filtered_J1img():
@@ -140,7 +140,7 @@ def plot_median_CHM_filtered_J1img():
     plt.yticks([])
     plt.title("Notch filtered Jupiter1")
     plt.subplot(1, 3, 2)
-    plt.imshow(cv2.cvtColor(median_filter, cv2.COLOR_BGR2RGB))
+    plt.imshow(cv2.cvtColor(median_filtered_j1, cv2.COLOR_BGR2RGB))
     plt.xticks([])
     plt.yticks([])
     plt.title("Median filtered")
@@ -288,6 +288,10 @@ def restored_JUP2_image():
 
 """ ---------------------------- Task 1e ----------------------------"""
 
+
+""" 
+___________________________FOURIER DOMAIN J1____________________________
+"""
 def homomorphic_filter(img, gL, gH, c, D0):
     img = img.astype(np.float64)
     img = np.log1p(img) # log transform to reduce the effect of dark pixels
@@ -315,17 +319,92 @@ n_red   = homomorphic_filter(n_red,   0.95, 1.0, 2, 10)
 
 homomorphic_filtered_j1 = cv2.merge((n_blue, n_green, n_red))
 
-plt.subplot(1, 2, 1)
-plt.imshow(cv2.cvtColor(notch_filtered_j1, cv2.COLOR_BGR2RGB))
-plt.xticks([]), plt.yticks([])
-plt.title("Notch filtered")
-plt.subplot(1, 2, 2)
-plt.imshow(cv2.cvtColor(homomorphic_filtered_j1, cv2.COLOR_BGR2RGB))
-plt.xticks([]), plt.yticks([])
-plt.title("Homomorphic filtered")
-plt.show()
+def plot_notchfiltered_homomorphicfiltered_J1img():
+    plt.subplot(1, 2, 1)
+    plt.imshow(cv2.cvtColor(notch_filtered_j1, cv2.COLOR_BGR2RGB))
+    plt.xticks([]), plt.yticks([])
+    plt.title("Notch filtered")
+    plt.subplot(1, 2, 2)
+    plt.imshow(cv2.cvtColor(homomorphic_filtered_j1, cv2.COLOR_BGR2RGB))
+    plt.xticks([]), plt.yticks([])
+    plt.title("Homomorphic filtered")
+    plt.show()
+
+""" 
+___________________________SPATIAL DOMAIN J1____________________________
+"""
+median_filtered_homomorphic_j1 = ndi.median_filter(homomorphic_filtered_j1, size=3)
+
+CHM_filtered_j1_2 = CHM_filter(median_filtered_homomorphic_j1, -2)
+CHM_filtered_j1_2 = np.uint8(CHM_filtered_j1_2)
+
+blue_chm, green_chm, red_chm = cv2.split(CHM_filtered_j1_2)
+
+def contrast_stretching(img):
+    img = img.astype(np.float64)
+    img = img - np.min(img)
+    img = img / np.max(img)
+    img = img * 255
+    return img
+
+blue_chm = contrast_stretching(blue_chm)
+green_chm = contrast_stretching(green_chm)
+red_chm = contrast_stretching(red_chm)
+
+contrast_stretching = cv2.merge((blue_chm, green_chm, red_chm))
+contrast_stretching = np.uint8(contrast_stretching)
+
+def plot_chm_filtered_contstretching_j1():
+    plt.subplot(1, 2, 1)
+    plt.imshow(cv2.cvtColor(CHM_filtered_j1, cv2.COLOR_BGR2RGB))
+    plt.xticks([]), plt.yticks([])
+    plt.title("CHM filtered")
+    plt.subplot(1, 2, 2)
+    plt.imshow(cv2.cvtColor(contrast_stretching, cv2.COLOR_BGR2RGB))
+    plt.xticks([]), plt.yticks([])
+    plt.title("Contrast stretching")
+    plt.show()
+
+def plot_enhanced_j1():
+    plt.subplot(2, 3, 1)
+    plt.imshow(cv2.cvtColor(orginal_jup1, cv2.COLOR_BGR2RGB))
+    plt.title('Original')
+    plt.xticks([]), plt.yticks([])
+    plt.subplot(2, 3, 2)
+    plt.imshow(cv2.cvtColor(notch_filtered_j1, cv2.COLOR_BGR2RGB))
+    plt.title('Notch 1')
+    plt.xticks([]), plt.yticks([])
+    plt.subplot(2, 3, 3)
+    plt.imshow(cv2.cvtColor(CHM_filtered_j1, cv2.COLOR_BGR2RGB))
+    plt.title('CHM  1')
+    plt.xticks([]), plt.yticks([])
+    plt.subplot(2, 3, 4)
+    plt.imshow(cv2.cvtColor(orginal_jup1, cv2.COLOR_BGR2RGB))
+    plt.xticks([]), plt.yticks([])
+    plt.subplot(2, 3, 5)
+    plt.imshow(cv2.cvtColor(homomorphic_filtered_j1, cv2.COLOR_BGR2RGB))
+    plt.title('Homomorphic')
+    plt.xticks([]), plt.yticks([])
+    plt.subplot(2, 3, 6)
+    plt.imshow(cv2.cvtColor(contrast_stretching, cv2.COLOR_BGR2RGB))
+    plt.title('contrast stretching')
+    plt.xticks([]), plt.yticks([])
+    plt.show()
 
 
+""" 
+___________________________FOURIER DOMAIN J1____________________________
+"""
+
+
+
+
+
+#___________RUN FUNCTIONS___________
+#plot_notchfiltered_homomorphicfiltered_J1img()
+#plot_chm_filtered_contstretching_j1()
+#plot_enhanced_j1() 
+#___________________________________
 
 cv2.waitKey(0)  
 cv2.destroyAllWindows()
