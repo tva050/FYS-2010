@@ -7,7 +7,7 @@ import matplotlib.colors as colors
 import scipy.io as sio
 import scipy.ndimage as ndi
 
-JUP1 = cv2.imread('Mandetory\Supplementary data\Jupiter1.png')
+JUP1 = cv2.imread('Mandetory\Supplementary data\Jupiter2.png')
 
 blue, green, red = cv2.split(JUP1)
 

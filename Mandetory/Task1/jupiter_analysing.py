@@ -88,7 +88,7 @@ red = np.abs(red)
 red = np.uint8(red)
 
 notch_filtered_j1 = cv2.merge((blue, green, red))
-n_blue, n_green, n_red = cv2.split(notch_filtered_j1)
+n_bluej1, n_greenj1, n_redj1 = cv2.split(notch_filtered_j1)
 
 # __Plotting__
 def plot_notch_filtered_J1img_mag():
@@ -113,14 +113,15 @@ def plot_notch_filtered_J1img_mag():
     plt.show()
 
 # __Median filter__
-median_filtered_j1 = ndi.median_filter(cv2.merge((blue, green, red)), size=3)
+median_filtered_j1 = ndi.median_filter(cv2.merge((n_bluej1, n_greenj1, n_redj1)), size=3)
+
 
 # __Contrast Harmonic Mean filter__
 np.seterr(invalid="ignore") # To ignore the warning of division by zero
 # Contrast Harmonic Mean filter, 
 # written with help from https://stackabuse.com/introduction-to-image-processing-in-python-with-opencv/
 def CHM_filter(img, Q):
-    img = img.astype(np.float64)
+    img = img.astype(np.float64) 
     numirator = img**(Q+1)
     denumirator = img**(Q)
     kernel = np.full(shape = 3, fill_value= 1.0, dtype = np.float64)
@@ -207,15 +208,19 @@ def fourier_transform_J2(img):
     
     return img
 
-blue_j2 = fourier_transform_J2(blue_j2)
+blue_j2  = fourier_transform_J2(blue_j2)
 green_j2 = fourier_transform_J2(green_j2)
-red_j2 = fourier_transform_J2(red_j2)
-f = np.fft.fft2(blue)
+red_j2   = fourier_transform_J2(red_j2)
+
+#-------------
+f = np.fft.fft2(blue_j2)
 fshift = np.fft.fftshift(f)
 magnitude_spectrum = np.log(np.abs(fshift))
-H1 = notch_filter_J2(blue.shape, 2, 5, 0)
+H1 = notch_filter_J2(blue_j2.shape, 2, 5, 0)
+#-------------
 
 notch_filtered_j2 = cv2.merge((blue_j2, green_j2, red_j2))
+n_bluej2, n_greenj2, n_redj2 = cv2.split(notch_filtered_j2)
 
 median_filter_j2 = cv2.medianBlur(notch_filtered_j2, 3)
 
@@ -313,11 +318,11 @@ def homomorphic_filter(img, gL, gH, c, D0):
     
     return img_filtered
 
-n_blue  = homomorphic_filter(n_blue,  0.95, 1.0, 2, 10)
-n_green = homomorphic_filter(n_green, 0.95, 1.0, 2, 10)
-n_red   = homomorphic_filter(n_red,   0.95, 1.0, 2, 10)
+n_bluej1  = homomorphic_filter(n_bluej1,  0.95, 1.0, 2, 10)
+n_greenj1 = homomorphic_filter(n_greenj1, 0.95, 1.0, 2, 10)
+n_redj1   = homomorphic_filter(n_redj1,   0.95, 1.0, 2, 10)
 
-homomorphic_filtered_j1 = cv2.merge((n_blue, n_green, n_red))
+homomorphic_filtered_j1 = cv2.merge((n_bluej1, n_greenj1, n_redj1))
 
 def plot_notchfiltered_homomorphicfiltered_J1img():
     plt.subplot(1, 2, 1)
@@ -338,7 +343,8 @@ median_filtered_homomorphic_j1 = ndi.median_filter(homomorphic_filtered_j1, size
 CHM_filtered_j1_2 = CHM_filter(median_filtered_homomorphic_j1, -2)
 CHM_filtered_j1_2 = np.uint8(CHM_filtered_j1_2)
 
-blue_chm, green_chm, red_chm = cv2.split(CHM_filtered_j1_2)
+blue_chmj1, green_chmj1, red_chmj1 = cv2.split(CHM_filtered_j1_2)
+
 
 def contrast_stretching(img):
     img = img.astype(np.float64)
@@ -347,20 +353,22 @@ def contrast_stretching(img):
     img = img * 255
     return img
 
-blue_chm = contrast_stretching(blue_chm)
-green_chm = contrast_stretching(green_chm)
-red_chm = contrast_stretching(red_chm)
+blue_chmj1  = contrast_stretching(blue_chmj1)
+green_chmj1 = contrast_stretching(green_chmj1)
+red_chmj1   = contrast_stretching(red_chmj1)
 
-contrast_stretching = cv2.merge((blue_chm, green_chm, red_chm))
-contrast_stretching = np.uint8(contrast_stretching)
+contrast_stretching_j1 = cv2.merge((blue_chmj1, green_chmj1, red_chmj1))
+contrast_stretching_j1 = np.uint8(contrast_stretching_j1)
 
+
+#-----------------PLOTS-----------------
 def plot_chm_filtered_contstretching_j1():
     plt.subplot(1, 2, 1)
     plt.imshow(cv2.cvtColor(CHM_filtered_j1, cv2.COLOR_BGR2RGB))
     plt.xticks([]), plt.yticks([])
     plt.title("CHM filtered")
     plt.subplot(1, 2, 2)
-    plt.imshow(cv2.cvtColor(contrast_stretching, cv2.COLOR_BGR2RGB))
+    plt.imshow(cv2.cvtColor(contrast_stretching_j1, cv2.COLOR_BGR2RGB))
     plt.xticks([]), plt.yticks([])
     plt.title("Contrast stretching")
     plt.show()
@@ -386,25 +394,104 @@ def plot_enhanced_j1():
     plt.title('Homomorphic')
     plt.xticks([]), plt.yticks([])
     plt.subplot(2, 3, 6)
-    plt.imshow(cv2.cvtColor(contrast_stretching, cv2.COLOR_BGR2RGB))
+    plt.imshow(cv2.cvtColor(contrast_stretching_j1, cv2.COLOR_BGR2RGB))
     plt.title('contrast stretching')
     plt.xticks([]), plt.yticks([])
     plt.show()
 
 
 """ 
-___________________________FOURIER DOMAIN J1____________________________
+___________________________SPATIAL DOMAIN J2____________________________
 """
 
 
+median_filtered_j2 = ndi.median_filter(JUP2, size=3)
+
+CHM_filtered_j2_2 = CHM_filter(median_filtered_j2, 3)
+CHM_filtered_j2_2 = np.uint8(CHM_filtered_j2_2)
+
+blue_chmj2, green_chmj2, red_chmj2 = cv2.split(CHM_filtered_j2_2)
+
+bluej2e  = fourier_transform_J2(blue_chmj2)
+greenj2e = fourier_transform_J2(green_chmj2)
+redj2e   = fourier_transform_J2(red_chmj2)
+
+""" 
+___________________________FREQUENCY DOMAIN J2____________________________
+"""
+notch_filtered_j2e = cv2.merge((bluej2e, greenj2e, redj2e))
+n_bluej2e, n_greenj2e, n_redj2e = cv2.split(notch_filtered_j2e)
+
+n_bluej2e  = homomorphic_filter(n_bluej2e,  2.5, 0.5, 5, 150)
+n_greenj2e = homomorphic_filter(n_greenj2e, 2.5, 0.5, 5, 150)
+n_redj2e   = homomorphic_filter(n_redj2e,   2.5, 0.5, 5, 150)
+
+homomorphic_filtered_j2 = cv2.merge((n_bluej2e, n_greenj2e, n_redj2e))
+h_bluej2e, h_greenj2e, h_redj2e = cv2.split(homomorphic_filtered_j2)
+
+def plot_before_after_spatial_domain_j2():
+    plt.subplot(1,2,1)
+    plt.imshow(cv2.cvtColor(CHM_filtered_j2, cv2.COLOR_BGR2RGB))
+    plt.title('')
+    plt.suptitle('Before spatial domain   $\leftrightarrow$   After spatial domain')
+    plt.xticks([]), plt.yticks([])
+    plt.subplot(1,2,2)
+    plt.imshow(cv2.cvtColor(notch_filtered_j2e, cv2.COLOR_BGR2RGB))
+    plt.title('')
+    plt.xticks([]), plt.yticks([])
+    plt.show()
 
 
 
-#___________RUN FUNCTIONS___________
+""" 
+___________________________SPATIAL DOMAIN J2____________________________
+"""
+h_bluej2e  = contrast_stretching(h_bluej2e)
+h_greenj2e = contrast_stretching(h_greenj2e)
+h_redj2e   = contrast_stretching(h_redj2e)
+
+contrast_stretching_j2 = cv2.merge((h_bluej2e, h_greenj2e, h_redj2e))
+contrast_stretching_j2 = np.uint8(contrast_stretching_j2)
+
+def plot_enhanced_j2():
+    plt.subplot(2, 3, 1)
+    plt.imshow(cv2.cvtColor(JUP2, cv2.COLOR_BGR2RGB))
+    plt.title('Original')
+    plt.xticks([]), plt.yticks([])
+    plt.subplot(2, 3, 2)
+    plt.imshow(cv2.cvtColor(notch_filtered_j2, cv2.COLOR_BGR2RGB))
+    plt.title('Notch')
+    plt.xticks([]), plt.yticks([])
+    plt.subplot(2, 3, 3)
+    plt.imshow(cv2.cvtColor(CHM_filtered_j2, cv2.COLOR_BGR2RGB))
+    plt.title('CHM filtered')
+    plt.xticks([]), plt.yticks([])
+    plt.subplot(2, 3, 4)
+    plt.imshow(cv2.cvtColor(JUP2, cv2.COLOR_BGR2RGB))
+    plt.xticks([]), plt.yticks([])
+    plt.subplot(2, 3, 5)
+    plt.imshow(cv2.cvtColor(homomorphic_filtered_j2, cv2.COLOR_BGR2RGB))
+    plt.title('Homomorphic')
+    plt.xticks([]), plt.yticks([])
+    plt.subplot(2, 3, 6)
+    plt.imshow(cv2.cvtColor(contrast_stretching_j2, cv2.COLOR_BGR2RGB))
+    plt.title('contrast stretching')
+    plt.xticks([]), plt.yticks([])
+    plt.show()
+
+
+
+#___________RUN ENCHANTMENT FUNCTIONS JUP1___________
 #plot_notchfiltered_homomorphicfiltered_J1img()
 #plot_chm_filtered_contstretching_j1()
 #plot_enhanced_j1() 
-#___________________________________
+#____________________________________________________
+
+
+#___________RUN ENCHANTMENT FUNCTIONS JUP2___________
+#plot_before_after_spatial_domain_j2()
+plot_enhanced_j2()
+#____________________________________________________
 
 cv2.waitKey(0)  
 cv2.destroyAllWindows()

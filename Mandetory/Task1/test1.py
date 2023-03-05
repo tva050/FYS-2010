@@ -6,52 +6,57 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import scipy.io as sio
 import scipy.ndimage as ndi
+from PIL import Image
 
-JUP1 = cv2.imread('Mandetory\Supplementary data\Jupiter1.png')
+JUP2 = cv2.imread('Mandetory\Supplementary data\Jupiter2.png') 
 
-blue, green, red = cv2.split(JUP1)
+blue, green, red = cv2.split(JUP2)
 
-orginal_jup1 = cv2.merge((blue, green, red))
+orginal_jup2 = cv2.merge((blue, green, red))
+
+blue_j2, green_j2, red_j2 = cv2.split(JUP2)
 
 
-""" 
-___________________________FOURIER DOMAIN____________________________
-"""
-
-def notch_filter_J1(shape, d0, u_k, v_k): 
+def notch_filter_J2(shape, d0, u_k, v_k): 
     M, N = shape
     H = np.zeros((M, N))
-    
     for u in range(0, M):
         for v in range(0, N):
             D_k = np.sqrt((u - M/2 + u_k)**2 + (v - N/2 + v_k)**2)
             D_mk = np.sqrt((u - M/2 - u_k)**2 + (v - N/2 - v_k)**2)
-            horizontal1 = u - M/2 + u_k 
-            vertical1 =v - N/2 + v_k
-            horizontal2 = u - M/2 - u_k 
-            vertical2 = v - N/2 - v_k
-        
-            if D_k <= d0 or D_mk <= d0 or horizontal1 == 0 or vertical1 == 0 or horizontal2 == 0 or vertical2 == 0:
+            if D_k <= d0 or D_mk <= d0 :
                 H[u, v] = 0.0
             else: 
                 H[u, v] = 1.0
     return H
 
-f_J1 = np.fft.fft2(red) 
-fshift_J1 = np.fft.fftshift(f_J1)
-magnitude_spectrum_J1 = np.log(np.abs(fshift_J1))
+def fourier_transform_J2(img):
+    f = np.fft.fft2(img)
+    fshift = np.fft.fftshift(f)
+    magnitude_spectrum = np.log(np.abs(fshift))
+    
+    H1 = notch_filter_J2(img.shape, 2, 5, 0)
 
-H1_J1 = notch_filter_J1(red.shape, 3, 7, 7)
+    img = fshift * H1
+    img = np.fft.ifftshift(img)
+    img = np.fft.ifft2(img)
+    img = np.abs(img)
+    img = np.uint8(img)
+    
+    return img
 
-red = fshift_J1 * H1_J1
-red = np.fft.ifftshift(red)
-red = np.fft.ifft2(red)
-red = np.abs(red)
-red = np.uint8(red)
+blue_j2 = fourier_transform_J2(blue_j2)
+green_j2 = fourier_transform_J2(green_j2)
+red_j2 = fourier_transform_J2(red_j2)
+#-------------
+f = np.fft.fft2(blue_j2)
+fshift = np.fft.fftshift(f)
+magnitude_spectrum = np.log(np.abs(fshift))
+H1 = notch_filter_J2(blue.shape, 2, 5, 0)
+#-------------
 
-notch_filtered = cv2.merge((blue, green, red))
-blue_, green_, red_ = cv2.split(notch_filtered)
-
+notch_filtered_j2 = cv2.merge((blue_j2, green_j2, red_j2))
+n_bluej2, n_greenj2, n_redj2 = cv2.split(notch_filtered_j2)
 def homomorphic_filter(img, gL, gH, c, D0):
     img = img.astype(np.float64)
     img = np.log1p(img) # log transform to reduce the effect of dark pixels
@@ -62,12 +67,7 @@ def homomorphic_filter(img, gL, gH, c, D0):
     highpass = (gH - gL) * (1 - np.exp(-(c * Duv**2) / (D0**2))) + gL       # GHPF (Gaussian High Pass Filter)
     #highpass = (1.0 - 1.0 / (1.0 + (D0 / Duv)**(2 * c))) * (gH - gL) + gL  # BHPF (Butterworth High Pass Filter)
     
-    fft_img = np.fft.fftshift(np.fft.fft2(img)) # fft    
-    plt.imshow(np.log(np.abs(fft_img)), cmap='gray')
-    plt.title('Fourier spectrum')
-    plt.xticks([]), plt.yticks([])
-    plt.show()
-    
+    fft_img = np.fft.fftshift(np.fft.fft2(img)) # fft  
     filtering_img = fft_img * highpass # filtering image
     filtered_img_log = np.fft.ifft2(np.fft.ifftshift(filtering_img)) # ifft shift
     
@@ -77,59 +77,51 @@ def homomorphic_filter(img, gL, gH, c, D0):
     img_filtered = np.uint8(img_filtered * 255 / np.max(img_filtered)) 
     
     return img_filtered
- 
-blue_profiler = homomorphic_filter (blue_,  0.9, 1., 10, 200)
-green_profiler = homomorphic_filter(green_, 0.9, 1., 10, 200)
-red_profiler = homomorphic_filter  (red_,   0.9, 1., 10, 200)
-    
-homomotphic_filtered = cv2.merge((blue_profiler, green_profiler, red_profiler))
 
-plt.imshow(cv2.cvtColor(homomotphic_filtered, cv2.COLOR_BGR2RGB))
-plt.title(r'Homomorphic filtered: low $\gamma_L$, high $\gamma_H$')
+
+n_bluej2  = homomorphic_filter(n_bluej2,  3., 0.2, 5, 300)
+n_greenj2 = homomorphic_filter(n_greenj2, 3., 0.2, 5, 300)
+n_redj2   = homomorphic_filter(n_redj2,   3., 0.2, 5, 300)
+
+homomorphic_filtered_j2 = cv2.merge((n_bluej2, n_greenj2, n_redj2))
+
+plt.subplot(1, 2, 1)
+plt.imshow(cv2.cvtColor(notch_filtered_j2, cv2.COLOR_BGR2RGB))
 plt.xticks([]), plt.yticks([])
+plt.title("Notch filtered")
+plt.subplot(1, 2, 2)
+plt.imshow(cv2.cvtColor(homomorphic_filtered_j2, cv2.COLOR_BGR2RGB))
+plt.xticks([]), plt.yticks([])
+plt.title("Homomorphic filtered")
 plt.show()
 
-plt.subplot(121)
-plt.imshow(cv2.cvtColor(notch_filtered, cv2.COLOR_BGR2RGB))
-plt.title('Notch filtered')
-plt.xticks([]), plt.yticks([])
-plt.subplot(122)
-plt.imshow(cv2.cvtColor(homomotphic_filtered, cv2.COLOR_BGR2RGB))
-plt.title(' Notch and Homomorphic filtered ')
-plt.xticks([]), plt.yticks([])
-plt.show()
+median_filter_j2 = cv2.medianBlur(homomorphic_filtered_j2, 3)
 
-
-    
-
-""" 
-_________________________SPATIAL DOMAIN_________________________
-"""
-
-# __Median filter__
-
-median_filter1 = ndi.median_filter(notch_filtered, size=3)
-median_filter2 = ndi.median_filter(homomotphic_filtered, size=3)
-
-# __Contrast Harmonic Mean filter__
-np.seterr(invalid="ignore") # 
-
+np.seterr(invalid="ignore") # To ignore the warning of division by zero
+# Contrast Harmonic Mean filter, 
+# written with help from https://stackabuse.com/introduction-to-image-processing-in-python-with-opencv/
 def CHM_filter(img, Q):
-    img = img.astype(np.float64)
+    img = img.astype(np.float64) 
     numirator = img**(Q+1)
     denumirator = img**(Q)
     kernel = np.full(shape = 3, fill_value= 1.0, dtype = np.float64)
     result = cv2.filter2D(numirator, -1, kernel) / cv2.filter2D(denumirator, -1, kernel)
     return result
 
-CHM_filtered_j1 = CHM_filter(median_filter1, -2)
-CHM_filtered_j1 = np.uint8(CHM_filtered_j1)
-blue__, green__, red__ = cv2.split(CHM_filtered_j1)
 
-chm_filtered = CHM_filter(median_filter2, -2)
-chm_filtered = np.uint8(chm_filtered)
+CHM_filtered_j2 = CHM_filter(median_filter_j2, 3)
+CHM_filtered_j2 = np.uint8(CHM_filtered_j2)
+blue, green, red = cv2.split(CHM_filtered_j2)
 
-blue_chm, green_chm, red_chm = cv2.split(chm_filtered)
+plt.subplot(1, 2, 1)
+plt.imshow(cv2.cvtColor(median_filter_j2, cv2.COLOR_BGR2RGB))
+plt.xticks([]), plt.yticks([])
+plt.title("Median filtered")
+plt.subplot(1, 2, 2)
+plt.imshow(cv2.cvtColor(CHM_filtered_j2, cv2.COLOR_BGR2RGB))
+plt.xticks([]), plt.yticks([])
+plt.title("CHM filtered")
+plt.show()
 
 def contrast_stretching(img):
     img = img.astype(np.float64)
@@ -138,49 +130,17 @@ def contrast_stretching(img):
     img = img * 255
     return img
 
-blue__ = contrast_stretching(blue__)
-green__ = contrast_stretching(green__)
-red__ = contrast_stretching(red__)
+contrast_stretching_j2 = contrast_stretching(CHM_filtered_j2)
+contrast_stretching_j2 = np.uint8(contrast_stretching_j2)
 
-cont_stretch = cv2.merge((blue__, green__, red__))
-cont_stretch = np.uint8(cont_stretch)
-
-blue_chm = contrast_stretching(blue_chm)
-green_chm = contrast_stretching(green_chm)
-red_chm = contrast_stretching(red_chm)
-
-contrast_stretching = cv2.merge((blue_chm, green_chm, red_chm))
-contrast_stretching = np.uint8(contrast_stretching)
-
-plt.subplot(121)
-plt.imshow(cv2.cvtColor(cont_stretch, cv2.COLOR_BGR2RGB))
-plt.title('Contrast stretching')
+plt.subplot(1, 2, 1)
+plt.imshow(cv2.cvtColor(CHM_filtered_j2, cv2.COLOR_BGR2RGB))
 plt.xticks([]), plt.yticks([])
-plt.subplot(122)
-plt.imshow(cv2.cvtColor(contrast_stretching, cv2.COLOR_BGR2RGB))
-plt.title('Contrast stretching')
+plt.title("CHM filtered")
+plt.subplot(1, 2, 2)
+plt.imshow(cv2.cvtColor(contrast_stretching_j2, cv2.COLOR_BGR2RGB))
 plt.xticks([]), plt.yticks([])
+plt.title("Contrast stretching")
 plt.show()
-
-
-""" plt.subplot(2, 3, 1)
-plt.imshow(cv2.cvtColor(orginal_jup1, cv2.COLOR_BGR2RGB))
-plt.title('Original')
-plt.subplot(2, 3, 2)
-plt.imshow(cv2.cvtColor(notch_filtered, cv2.COLOR_BGR2RGB))
-plt.title('Notch filtered 1')
-plt.subplot(2, 3, 3)
-plt.imshow(cv2.cvtColor(CHM_filtered_j1, cv2.COLOR_BGR2RGB))
-plt.title('CHM filtered 1')
-plt.subplot(2, 3, 4)
-plt.imshow(cv2.cvtColor(orginal_jup1, cv2.COLOR_BGR2RGB))
-plt.subplot(2, 3, 5)
-plt.imshow(cv2.cvtColor(homomotphic_filtered, cv2.COLOR_BGR2RGB))
-plt.title('Homomorphic filtered 2')
-plt.subplot(2, 3, 6)
-plt.imshow(cv2.cvtColor(contrast_stretching, cv2.COLOR_BGR2RGB))
-plt.title('CHM filtered 2')
-plt.show() 
- """
 
 
