@@ -7,7 +7,7 @@ import scipy.ndimage as ndi
 import scipy as sc
 from scipy.signal import wiener
 
-plt.style.use('ggplot')
+#plt.style.use('ggplot')
 
 """  ------------------ 1. Load the image ------------------ """
 
@@ -39,15 +39,52 @@ plt.bar(bins[:-1], hist, width=0.008, color='black')
 plt.title('Histogram of the point cloud intensity values')
 plt.show()
 
-"""  ------------------ 3. Graph Fourier mode ------------------ """
+"""  ------------------ 3. Graph Fourier mode (eig) ------------------ """
 
-eigenvalues, eigenvectors = np.linalg.eig(L)
+eigenvalues, eigenvectors = np.linalg.eig(L) # eigenvalues and eigenvectors of the Laplacian
 
 
 # ordering the eigenvalues 
 eigenvalues = np.sort(eigenvalues)
+eigenvectors = eigenvectors[:, np.argsort(eigenvalues)] 
+
+# checking that they are all positive if not, there is an error 
+if np.all(eigenvalues >= 0) == False:
+    print('Error: the eigenvalues are not all positive')
 
 # plotting the eigenvalues
-plt.plot(eigenvalues, color = 'black')
-plt.title('Eigenvalues of the Laplacian')
+def plot_eigenvalues():
+    plt.plot(eigenvalues, color = 'black')
+    plt.title('Eigenvalues of the Laplacian')
+    plt.xlabel('Index')
+    plt.ylabel('Eigenvalue')
+    plt.show()
+
+plot_eigenvalues()
+
+""" ------------------ 4. Fourier mode ------------------ """
+# plot the Fourier mode associeted to the first non-zero eigenvalue on graph
+
+eigenvector1 = eigenvectors[:,1]
+
+plt.scatter(X[:,1], X[:,0], c=eigenvector1, cmap='gray')
+plt.ylim(400, 0)
+plt.xticks([]), plt.yticks([])
+plt.title('Fourier mode associated to the first non-zero eigenvalue')
 plt.show()
+
+
+eigenvector2 = eigenvectors[:,2]
+plt.scatter(X[:,1], X[:,0], c=eigenvector2, cmap='gray')
+plt.ylim(400, 0)
+plt.xticks([]), plt.yticks([])
+plt.title('Fourier mode associated to the second non-zero eigenvalue')
+plt.show()
+
+eigenvector3 = eigenvectors[:,2500]
+plt.scatter(X[:,1], X[:,0], c=eigenvector3, cmap='gray')
+plt.ylim(400, 0)
+plt.xticks([]), plt.yticks([])
+plt.title('Fourier mode associated to the second non-zero eigenvalue')
+plt.show()
+
