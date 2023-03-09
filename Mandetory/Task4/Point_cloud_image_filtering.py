@@ -52,8 +52,11 @@ eigenvectors = eigenvectors[:,idx]
 
 
 # checking that they are all positive if not, there is an error 
-if np.all(eigenvalues >= 0) == False:
+if np.all(eigenvalues < 0) == False:
     print('Error: the eigenvalues are not all positive')
+    print('The smallest eigenvalue is: ', eigenvalues[0])
+    
+
 
 # plotting the eigenvalues
 def plot_eigenvalues():
@@ -122,13 +125,23 @@ def plot_eigenvector2300():
 
 graph_fourier = np.dot(eigenvectors.T, Z) 
 
-# plot the graph Fourier transform on a figure where the x-axis represents the Laplacian eigenvalue
+
+# plot the graph Fourier transform from the first non-zero eigenvalue 
 def plot_graph_fourier():
     plt.plot(eigenvalues, graph_fourier, color = 'black')
     plt.title('Graph Fourier transform')
     plt.xlabel('Laplacian eigenvalue')
     plt.ylabel('Fourier coefficient')
     plt.show()
+    
+
+# plot the graph Fourier transform on a figure where the x-axis represents the Laplacian eigenvalue
+""" def plot_graph_fourier():
+    plt.plot(eigenvalues, graph_fourier, color = 'black')
+    plt.title('Graph Fourier transform')
+    plt.xlabel('Laplacian eigenvalue')
+    plt.ylabel('Fourier coefficient')
+    plt.show() """
     
     
     
