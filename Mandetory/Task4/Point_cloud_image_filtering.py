@@ -17,13 +17,13 @@ plt.style.use('ggplot')
 # load the .npz file
 coffe = cv2.imread('Mandetory\Supplementary data\coffee.png', 0)
 point_cloud = np.load('Mandetory\Supplementary data\point_cloud.npz')
-laplacian = np.load('Mandetory\Supplementary data\point_cloud_Laplacian.npz')
+Laplacian = np.load('Mandetory\Supplementary data\point_cloud_Laplacian.npz')
 
 # extract the data  
 X = point_cloud['X']
 Z = point_cloud['Z']
 
-L = laplacian['L']
+L = Laplacian['L']
 
 def plot_point_cloud_image():
     plt.scatter(X[:,1], X[:,0], c=Z, cmap='gray')
@@ -46,7 +46,7 @@ def plot_histogram():
 eigenvalues, eigenvectors = np.linalg.eigh(L) # eigenvalues and eigenvectors of the Laplacian
 
 
-idx = eigenvalues.argsort()
+idx = np.argsort(eigenvalues)
 eigenvalues = eigenvalues[idx]
 eigenvectors = eigenvectors[:,idx]
 
@@ -55,6 +55,7 @@ eigenvectors = eigenvectors[:,idx]
 if np.all(eigenvalues < 0) == False:
     print('Error: the eigenvalues are not all positive')
     print('The smallest eigenvalue is: ', eigenvalues[0])
+    
     
 
 
@@ -123,8 +124,7 @@ def plot_eigenvector2300():
 # Perform a Graph Fourier Transform on the image z, it should be a vector with 
 # the same size as Z.
 
-graph_fourier = np.dot(eigenvectors.T, Z) 
-
+graph_fourier = np.inner(eigenvectors.T, Z) # graph Fourier transform of the image Z (Source: https://en.wikipedia.org/wiki/Graph_Fourier_transform)
 
 # plot the graph Fourier transform from the first non-zero eigenvalue 
 def plot_graph_fourier():
@@ -148,7 +148,64 @@ def plot_graph_fourier():
     
 """ ------------------ 6. Filtering lowpass ------------------ """
 
+# apply an ideal lowpass filter to the graph Fourier transform with a cut-off 
+# frequency c, and than perform the inverse Graph Fourier Transform to obtain
+# the filtered image
 
+c_lowpass = 0.2 # cut-off frequency
+
+low_pass = np.zeros(len(graph_fourier))
+low_pass = np.where(eigenvalues < c_lowpass, graph_fourier, 0)
+def plot_low_pass():
+    plt.plot(eigenvalues, low_pass, color = 'black')
+    plt.title('Graph Fourier transform')
+    plt.xlabel('Laplacian eigenvalue')
+    plt.ylabel('Fourier coefficient')
+    plt.show()
+    
+    inverse_graph_fourier = np.dot(eigenvectors, low_pass)
+    
+    plt.subplot(1,2,1)
+    plt.scatter(X[:,1], X[:,0], c=Z, cmap='gray')
+    plt.ylim(400, 0)
+    plt.xticks([]), plt.yticks([])
+    plt.title('Original image')
+    plt.subplot(1,2,2)
+    plt.scatter(X[:,1], X[:,0], c=inverse_graph_fourier, cmap='gray') # inverse graph Fourier transform
+    plt.ylim(400, 0)
+    plt.xticks([]), plt.yticks([])
+    plt.title('Low pass filtered')
+    plt.show()
+
+"""  ------------------ 7. Filtering highpass ------------------ """
+
+c_highpass = 0.01 # cut-off frequency
+
+high_pass = np.zeros(len(graph_fourier))
+high_pass = np.where(eigenvalues > c_highpass, graph_fourier)
+
+def plot_high_pass():
+    plt.plot(eigenvalues, high_pass, color = 'black')
+    plt.title('Graph Fourier transform')
+    plt.xlabel('Laplacian eigenvalue')
+    plt.ylabel('Fourier coefficient')
+    plt.show()
+
+    inverse_graph_fourier = np.dot(eigenvectors, high_pass)
+    
+    plt.subplot(1,2,1)
+    plt.scatter(X[:,1], X[:,0], c=Z, cmap='gray')
+    plt.ylim(400, 0)
+    plt.xticks([]), plt.yticks([])
+    plt.title('Original image')
+    plt.subplot(1,2,2)
+    plt.scatter(X[:,1], X[:,0], c=inverse_graph_fourier, cmap='gray') # inverse graph Fourier transform
+    plt.ylim(400, 0)
+    plt.xticks([]), plt.yticks([])
+    plt.title('High pass filtered')
+    plt.show()
+    
+""" ------------------ 8. ------------------ """
 
 
 if __name__ == '__main__':
@@ -158,3 +215,5 @@ if __name__ == '__main__':
     #plot_modes()
     #plot_eigenvector2300()
     plot_graph_fourier()
+    plot_low_pass()
+    plot_high_pass()
