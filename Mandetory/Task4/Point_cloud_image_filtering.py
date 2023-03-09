@@ -179,10 +179,10 @@ def plot_low_pass():
 
 """  ------------------ 7. Filtering highpass ------------------ """
 
-c_highpass = 0.01 # cut-off frequency
+c_highpass = 1 # cut-off frequency
 
 high_pass = np.zeros(len(graph_fourier))
-high_pass = np.where(eigenvalues > c_highpass, graph_fourier)
+high_pass = np.where(eigenvalues > c_highpass, graph_fourier, 0)
 
 def plot_high_pass():
     plt.plot(eigenvalues, high_pass, color = 'black')
@@ -205,9 +205,6 @@ def plot_high_pass():
     plt.title('High pass filtered')
     plt.show()
     
-""" ------------------ 8. ------------------ """
-
-
 if __name__ == '__main__':
     #plot_point_cloud_image()
     #plot_histogram()
